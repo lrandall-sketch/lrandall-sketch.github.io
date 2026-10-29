@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landform Detective - Geography Guessing Game</title>
+  <style>
+    :root {
+      --primary: #2e7d32;
+      --primary-dark: #1b5e20;
+      --secondary: #0288d1;
+      --accent: #f57c00;
+      --bg: #f4f6f8;
+      --card-bg: #ffffff;
+      --text: #263238;
+      --light-text: #546e7a;
+      --correct: #4caf50;
+      --incorrect: #e53935;
+      --border-radius: 12px;
+      --shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 1.2rem;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+      position: relative;
+      user-select: none;
+    }
+
+    header h1 { 
+      font-size: 2.2rem; 
+      margin-bottom: 0.3rem; 
+      cursor: pointer;
+    }
+    header p { opacity: 0.95; font-size: 1.05rem; }
+
+    .teacher-toggle-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: rgba(255,255,255,0.25);
+      border: 1px solid rgba(255,255,255,0.6);
+      color: white;
+      padding: 7px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: bold;
+      transition: background 0.2s;
+      display: none; /* Hidden by default from students */
+    }
+
+    .teacher-toggle-btn:hover {
+      background: rgba(255,255,255,0.4);
+    }
+
+    main {
+      flex: 1;
+      max-width: 1000px;
+      width: 95%;
+      margin: 20px auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .game-card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #eceff1;
+      padding-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .picture-badge {
+      background: #e8f5e9;
+      color: var(--primary-dark);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 1.15rem;
+      border: 1px solid #c8e6c9;
+    }
+
+    .score-board {
+      display: flex;
+      gap: 15px;
+      font-weight: bold;
+    }
+
+    .score-item {
+      background: #f0f4f8;
+      padding: 8px 14px;
+      border-radius: 8px;
+      color: #37474f;
+      font-size: 0.95rem;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .content-grid { grid-template-columns: 1fr; }
+      .teacher-toggle-btn { position: static; margin-top: 10px; }
+    }
+
+    .image-container {
+      background: #111;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      min-height: 320px;
+      border: 2px solid #cfd8dc;
+    }
+
+    .image-container img, .image-container svg {
+      width: 100%;
+      height: 100%;
+      max-height: 380px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .workspace {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step-box {
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 16px;
+      background: #fafafa;
+    }
+
+    .step-title {
+      font-weight: bold;
+      color: var(--primary-dark);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.05rem;
+    }
+
+    .tag-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      background: #e0f2f1;
+      color: #00695c;
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 0.88rem;
+      cursor: pointer;
+      border: 1px solid #b2dfdb;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .chip.selected {
+      background: #00695c;
+      color: white;
+      border-color: #004d40;
+    }
+
+    textarea, input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .option-btn {
+      padding: 14px;
+      border: 2px solid #cfd8dc;
+      background: white;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      color: #263238;
+    }
+
+    .option-btn:hover {
+      border-color: var(--secondary);
+      background: #e1f5fe;
+    }
+
+    .option-btn.correct {
+      background: var(--correct) !important;
+      color: white !important;
+      border-color: var(--correct) !important;
+    }
+
+    .option-btn.incorrect {
+      background: var(--incorrect) !important;
+      color: white !important;
+      border-color: var(--incorrect) !important;
+    }
+
+    .action-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .action-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .action-btn:disabled {
+      background: #cfd8dc;
+      cursor: not-allowed;
+    }
+
+    /* Modal Windows */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.65);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      width: 92%;
+      max-width: 800px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .teacher-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      gap: 15px;
+    }
+
+    .teacher-item-row img, .teacher-item-row svg {
+      width: 60px;
+      height: 45px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .add-card-box {
+      background: #e8f5e9;
+      border: 2px dashed #2e7d32;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .add-card-box h3 {
+      color: #1b5e20;
+      font-size: 1.1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label {
+      font-weight: bold;
+      font-size: 0.85rem;
+      color: #37474f;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media(max-width:600px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    .error-msg {
+      color: #e53935;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-top: 5px;
+    }
+
+    .success-msg {
+      color: #2e7d32;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-top: 5px;
+    }
+
+    canvas#confetti-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <header>
+    <h1 id="header-title" onclick="handleTitleClick()">🌍 Landform Detective</h1>
+    <p>Look at the picture, describe what you see, and guess the landform!</p>
+    <button class="teacher-toggle-btn" id="teacher-btn" onclick="openPinModal()">⚙️ Teacher Admin</button>
+  </header>
+
+  <main id="main-content">
+    <!-- Game view rendered dynamically -->
+  </main>
+
+  <!-- Custom Alert Modal -->
+  <div class="modal-overlay" id="alert-modal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <h2 id="alert-title" style="margin-bottom: 10px; color: var(--primary-dark);">Notice</h2>
+      <p id="alert-message" style="color: var(--light-text); font-size: 1rem; margin-bottom: 20px;"></p>
+      <button class="action-btn" onclick="closeAlertModal()">OK</button>
+    </div>
+  </div>
+
+  <!-- PIN Entry Modal -->
+  <div class="modal-overlay" id="pin-modal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <h2 style="margin-bottom: 10px; color: var(--primary-dark);">🔒 Teacher Admin Access</h2>
+      <p style="color: var(--light-text); font-size: 0.95rem; margin-bottom: 15px;">
+        Enter Teacher PIN to manage cards & images (Default: <strong>1234</strong>).
+      </p>
+      <input type="password" id="pin-input" placeholder="Enter PIN" style="text-align: center; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 10px;" onkeydown="if(event.key==='Enter') verifyPin()">
+      <div id="pin-error" class="error-msg" style="display: none;">❌ Incorrect PIN. Try again.</div>
+      <div style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+        <button class="action-btn" onclick="verifyPin()">Submit PIN</button>
+        <button class="action-btn" style="background: #78909c;" onclick="closePinModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Teacher Admin Modal -->
+  <div class="modal-overlay" id="teacher-modal">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid #2e7d32; padding-bottom:10px;">
+        <h2>⚙️ Teacher Card & Picture Management</h2>
+        <div style="display:flex; gap:8px;">
+          <button class="action-btn" style="background:#f57c00; padding:6px 12px; font-size:0.85rem;" onclick="showChangePinForm()">🔑 Change PIN</button>
+          <button class="action-btn" style="background:#e53935; padding:6px 12px; font-size:0.85rem;" onclick="resetAllImages()">Reset Defaults</button>
+        </div>
+      </div>
+
+      <!-- Change PIN Area -->
+      <div id="change-pin-box" style="display: none; background: #fff3e0; border: 1px solid #ffe0b2; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+        <strong>New Teacher PIN:</strong>
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <input type="password" id="new-pin-input" placeholder="Enter new PIN" style="max-width: 200px;">
+          <button class="action-btn" style="padding: 6px 12px; font-size: 0.9rem;" onclick="saveNewPin()">Save PIN</button>
+        </div>
+        <div id="pin-change-status"></div>
+      </div>
+
+      <div id="admin-status-msg"></div>
+
+      <!-- Add New Custom Card Form -->
+      <div class="add-card-box">
+        <h3>➕ Add New Custom Landform Card</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Correct Landform Name *</label>
+            <input type="text" id="new-name" placeholder="e.g., Canyon">
+          </div>
+          <div class="form-group">
+            <label>Picture File *</label>
+            <input type="file" id="new-img-file" accept="image/*">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>3 Incorrect Options (Distractors, comma-separated) *</label>
+          <input type="text" id="new-options" placeholder="e.g., Valley, Plateau, Mountain">
+        </div>
+
+        <div class="form-group">
+          <label>Feature Observation Tags (comma-separated)</label>
+          <input type="text" id="new-tags" placeholder="e.g., Steep rock walls, Deep gorge, Flowing river">
+        </div>
+
+        <button class="action-btn" style="background:#0288d1; align-self:flex-start;" onclick="addNewCustomCard()">Save & Add Card</button>
+      </div>
+
+      <h3 style="margin-bottom:10px; color:#263238;">Existing Cards (Upload custom photos below)</h3>
+      <div id="teacher-items-list"></div>
+
+      <div style="margin-top: 20px; text-align: right;">
+        <button class="action-btn" onclick="closeTeacherPanel()">Done & Return to Game</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Safe storage wrapper for Google Sites sandboxed iframes
+    const Storage = {
+      get(key) {
+        try { return localStorage.getItem(key); } catch(e) { return null; }
+      },
+      set(key, val) {
+        try { localStorage.setItem(key, val); } catch(e) {}
+      },
+      remove(key) {
+        try { localStorage.removeItem(key); } catch(e) {}
+      }
+    };
+
+    // 18 Landforms matching image uploads
+    const DEFAULT_LANDFORMS = [
+      {
+        id: 'A',
+        label: 'PICTURE A',
+        name: 'Plateau',
+        options: ['Plateau', 'Valley', 'Plains', 'Mountain'],
+        tags: ['Elevated flat land', 'Steep cliffs', 'Tableland', 'Flat top', 'High altitude'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/main/plateau.png?raw=true',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#e0f7fa"/><path d="M0,280 L120,280 L180,140 L420,140 L480,280 L600,280 L600,400 L0,400 Z" fill="#8d6e63"/><path d="M180,140 L420,140 L450,200 L150,200 Z" fill="#a1887f"/><rect x="0" y="320" width="600" height="80" fill="#558b2f"/></svg>`
+      },
+      {
+        id: 'B',
+        label: 'PICTURE B',
+        name: 'Plains',
+        options: ['Plains', 'Plateau', 'Valley', 'Island'],
+        tags: ['Flat green land', 'Open horizon', 'Low elevation', 'Single tree', 'Grassy field'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/main/plains.png?raw=true',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#78909c"/><rect x="0" y="240" width="600" height="160" fill="#4caf50"/><path d="M280,240 Q275,180 270,140 Q278,140 282,240 Z" fill="#3e2723"/><circle cx="270" cy="120" r="28" fill="#2e7d32"/></svg>`
+      },
+      {
+        id: 'C',
+        label: 'PICTURE C',
+        name: 'Valley',
+        options: ['Valley', 'Plateau', 'Plains', 'River delta'],
+        tags: ['Low land between hills', 'U-shaped slope', 'Stream running through', 'Green mountainsides'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/valley.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#81d4fa"/><polygon points="0,60 220,220 0,400" fill="#43a047"/><polygon points="600,20 380,220 600,400" fill="#2e7d32"/><polygon points="180,220 420,220 500,400 100,400" fill="#66bb6a"/><path d="M300,220 Q320,290 280,340 T360,400" fill="none" stroke="#0288d1" stroke-width="12"/></svg>`
+      },
+      {
+        id: 'D',
+        label: 'PICTURE D',
+        name: 'Island',
+        options: ['Island', 'Peninsula', 'Isthmus', 'Bay'],
+        tags: ['Surrounded by water', 'Ocean on all sides', 'Isolated landmass', 'Tropical trees', 'Coral reef'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/island.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#0288d1"/><ellipse cx="300" cy="220" rx="220" ry="110" fill="#26c6da"/><path d="M150,210 C180,130 420,120 480,200 C510,250 430,300 320,290 C180,280 120,250 150,210 Z" fill="#2e7d32"/></svg>`
+      },
+      {
+        id: 'E',
+        label: 'PICTURE E',
+        name: 'Peninsula',
+        options: ['Peninsula', 'Island', 'Isthmus', 'Gulf'],
+        tags: ['Water on 3 sides', 'Connected to mainland', 'Coastal protrusion', 'Satellite view', 'Florida map'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/peninsula.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#0288d1"/><path d="M0,0 L600,0 L600,100 C480,120 440,200 420,300 C400,380 340,380 320,280 C300,180 200,160 0,160 Z" fill="#558b2f"/></svg>`
+      },
+      {
+        id: 'F',
+        label: 'PICTURE F',
+        name: 'Isthmus',
+        options: ['Isthmus', 'Peninsula', 'River mouth', 'Estuary'],
+        tags: ['Narrow strip of land', 'Connects two landmasses', 'Water on two sides', 'Red arrow pointing', 'Land bridge'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/isthmus.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#1565c0"/><path d="M0,0 L600,0 L600,140 C450,140 380,160 340,180 C320,160 220,120 0,120 Z" fill="#33691e"/><path d="M0,400 L600,400 L600,260 C450,260 380,240 340,220 C320,240 220,280 0,280 Z" fill="#33691e"/><rect x="320" y="180" width="35" height="40" fill="#558b2f"/><path d="M100,200 L230,200 L230,180 L280,200 L230,220 L230,200 Z" fill="#ff0000"/></svg>`
+      },
+      {
+        id: 'G',
+        label: 'PICTURE G',
+        name: 'Bay',
+        options: ['Bay', 'Gulf', 'Island', 'Estuary'],
+        tags: ['Curved shoreline', 'Sheltered body of water', 'Ocean inlet', 'Sandy beach arc', 'Hanauma Bay aerial view'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/Copy-of-1-Topic-3-pptx-Google-Slides-10-28-2026_11_13_AM.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#00838f"/><path d="M0,0 L600,0 L600,180 C500,80 400,60 300,60 C150,60 40,140 0,280 Z" fill="#8d6e63"/><path d="M600,400 L600,220 C550,300 450,350 300,360 C150,370 50,320 0,400 Z" fill="#8d6e63"/><path d="M80,260 C150,320 300,330 450,280" fill="none" stroke="#fff8e1" stroke-width="20"/><path d="M80,240 C150,300 300,310 450,260" fill="none" stroke="#00bcd4" stroke-width="30"/></svg>`
+      },
+      {
+        id: 'H',
+        label: 'PICTURE H',
+        name: 'Gulf',
+        options: ['Gulf', 'Bay', 'Estuary', 'Peninsula'],
+        tags: ['Large deep ocean inlet', 'Enclosed by coastline', 'Gulf of Mexico map', 'Marine waters'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/gulf.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#689f38"/><path d="M30,0 C150,30 500,30 530,0 C560,80 580,180 560,260 C500,260 420,320 320,400 C200,400 100,320 0,220 Z" fill="#1976d2"/><path d="M50,15 C160,40 480,40 510,15 C530,90 550,180 530,240 C480,240 400,300 310,370 C200,370 110,300 20,200 Z" fill="#64b5f6"/></svg>`
+      },
+      {
+        id: 'I',
+        label: 'PICTURE I',
+        name: 'River mouth',
+        options: ['River mouth', 'River delta', 'Estuary', 'Fault'],
+        tags: ['River enters ocean/lake', 'Red arrow pointing', 'Water discharge point', 'Sediment entry'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/river%20mouth.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#37474f"/><rect x="0" y="0" width="200" height="400" fill="#1565c0"/><path d="M600,100 Q400,80 300,180 Q250,230 200,200 L200,260 Q300,290 350,220 Q450,120 600,160 Z" fill="#1e88e5"/><path d="M200,0 L600,0 L600,100 Q400,80 300,180 L200,200 Z" fill="#546e7a"/><path d="M200,260 Q300,290 350,220 Q450,120 600,160 L600,400 L200,400 Z" fill="#455a64"/><path d="M60,200 L160,200 L160,180 L200,200 L160,220 L160,200 Z" fill="#ff0000"/></svg>`
+      },
+      {
+        id: 'J',
+        label: 'PICTURE J',
+        name: 'River delta',
+        options: ['River delta', 'River mouth', 'Estuary', 'Valley'],
+        tags: ['Fan-shaped sediment', 'Red arrow pointing', 'Branching channels', 'Deposition at river end', 'Triangular landform'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/river%20delta.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#0d47a1"/><path d="M300,0 L600,0 L600,400 L450,400 Z" fill="#9e9d24"/><path d="M450,0 L600,0 L600,300 C500,360 280,280 230,180 C280,90 380,30 450,0 Z" fill="#c0ca33"/><path d="M520,0 L320,160 L180,180" stroke="#1565c0" stroke-width="10" fill="none"/><path d="M400,90 L300,240" stroke="#1565c0" stroke-width="6" fill="none"/><path d="M100,180 L200,180 L200,160 L240,180 L200,200 L200,180 Z" fill="#ff0000"/></svg>`
+      },
+      {
+        id: 'K',
+        label: 'PICTURE K',
+        name: 'Estuary',
+        options: ['Estuary', 'River delta', 'Gulf', 'Bay'],
+        tags: ['Wide muddy mouth', 'Red arrow pointing', 'Freshwater mixes with ocean', 'Tidal zone', 'Brackish water'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/estuary.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#1a237e"/><path d="M0,0 L200,0 L180,150 Q140,220 0,260 Z" fill="#2e7d32"/><path d="M600,0 L400,0 L420,180 Q460,300 600,340 Z" fill="#2e7d32"/><rect x="0" y="240" width="600" height="160" fill="#33691e"/><path d="M220,400 L200,280 Q240,180 200,120 L400,120 Q360,180 400,280 L380,400 Z" fill="#a1887f"/><path d="M100,320 L210,320 L210,300 L250,320 L210,340 L210,320 Z" fill="#ff0000"/></svg>`
+      },
+      {
+        id: 'L',
+        label: 'PICTURE L',
+        name: 'Fault',
+        options: ['Fault', 'Valley', 'Plateau', 'Savannah'],
+        tags: ['Long crack in ground', 'Red arrow pointing', 'Crustal shift line', 'Fracture in rocks', 'Tectonic boundary'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/fault.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#8d6e63"/><path d="M0,0 L300,0 L260,400 L0,400 Z" fill="#a1887f"/><path d="M300,0 L600,0 L600,400 L260,400 Z" fill="#795548"/><line x1="300" y1="0" x2="260" y2="400" stroke="#3e2723" stroke-width="12"/><path d="M120,180 L230,180 L230,160 L270,180 L230,200 L230,180 Z" fill="#ff0000"/></svg>`
+      },
+      {
+        id: 'M',
+        label: 'PICTURE M',
+        name: 'Savannah',
+        options: ['Savannah', 'Prairie', 'Tundra', 'Deciduous forest'],
+        tags: ['Grassy plain with scattered trees', 'Acacia trees', 'Warm climate', 'Mt Kilimanjaro backdrop'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/savannah.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#ffe0b2"/><rect x="0" y="220" width="600" height="180" fill="#c0ca33"/><path d="M420,240 L420,170 L430,170 L430,240 Z" fill="#3e2723"/><ellipse cx="425" cy="150" rx="75" ry="22" fill="#33691e"/><polygon points="80,260 280,80 480,260" fill="#7986cb" opacity="0.4"/></svg>`
+      },
+      {
+        id: 'N',
+        label: 'PICTURE N',
+        name: 'Prairie',
+        options: ['Prairie', 'Savannah', 'Plains', 'Tundra'],
+        tags: ['Tall golden grass', 'Rolling grassland', 'Sunset lighting', 'Few/no trees', 'Temperate climate'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/prairie.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#ffb74d"/><path d="M0,180 Q200,140 600,200 L600,400 L0,400 Z" fill="#fbc02d"/><path d="M0,230 Q300,190 600,250 L600,400 L0,400 Z" fill="#f57f17"/><path d="M0,280 Q200,250 600,300 L600,400 L0,400 Z" fill="#e65100"/></svg>`
+      },
+      {
+        id: 'O',
+        label: 'PICTURE O',
+        name: 'Coniferous forest',
+        options: ['Coniferous forest', 'Deciduous forest', 'Savannah', 'Tundra'],
+        tags: ['Evergreen pine trees', 'Needle leaves', 'Cone-bearing trees', 'Dense green canopy', 'Tall spruces'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/coniferous%20forest.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#b2dfdb"/><g fill="#1b5e20"><polygon points="120,400 70,220 170,220"/><polygon points="120,250 80,120 160,120"/><polygon points="120,150 95,50 145,50"/><polygon points="320,400 260,180 380,180"/><polygon points="320,220 280,100 360,100"/><polygon points="500,400 440,200 560,200"/><polygon points="500,240 460,110 540,110"/></g></svg>`
+      },
+      {
+        id: 'P',
+        label: 'PICTURE P',
+        name: 'Deciduous forest',
+        options: ['Deciduous forest', 'Coniferous forest', 'Prairie', 'Savannah'],
+        tags: ['Broad yellow/orange leaves', 'Autumn colors', 'Shedding leaves', 'Seasonal foliage'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/Deciduous%20forest.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#fff8e1"/><rect x="0" y="300" width="600" height="100" fill="#f57f17"/><path d="M180,340 Q210,200 160,80 L200,80 Q230,200 220,340 Z" fill="#3e2723"/><path d="M420,340 Q440,220 400,100 L440,100 Q470,220 460,340 Z" fill="#3e2723"/><circle cx="180" cy="100" r="90" fill="#fbc02d" opacity="0.9"/><circle cx="420" cy="110" r="100" fill="#f57c00" opacity="0.95"/><circle cx="300" cy="90" r="80" fill="#ffb300" opacity="0.85"/></svg>`
+      },
+      {
+        id: 'Q',
+        label: 'PICTURE Q',
+        name: 'Tundra',
+        options: ['Tundra', 'Prairie', 'Savannah', 'Coniferous forest'],
+        tags: ['Treeless cold region', 'Snow and ice cover', 'Frozen mountains', 'Polar climate'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/tundra.png',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#e0f7fa"/><polygon points="0,260 180,100 380,280" fill="#90a4ae"/><polygon points="180,100 210,140 160,160" fill="#ffffff"/><polygon points="220,280 420,80 600,300" fill="#78909c"/><polygon points="420,80 460,130 390,140" fill="#ffffff"/><path d="M0,260 Q300,240 600,280 L600,400 L0,400 Z" fill="#eceff1"/><path d="M0,320 Q300,300 600,340 L600,400 L0,400 Z" fill="#ffffff"/></svg>`
+      },
+      {
+        id: 'R',
+        label: 'PICTURE R',
+        name: 'Taiga',
+        options: ['Taiga', 'Tundra', 'Deciduous forest', 'Savannah'],
+        tags: ['Snowy evergreen forest', 'Pixel/Minecraft graphics', 'Pine trees in snow', 'Boreal forest zone'],
+        imgFile: 'https://raw.githubusercontent.com/lrandall-sketch/Lanform-pics/refs/heads/main/taiga%20minecraft.avif',
+        svg: `<svg viewBox="0 0 600 400"><rect width="600" height="400" fill="#37474f"/><rect x="0" y="240" width="600" height="160" fill="#eceff1"/><g fill="#1b5e20"><polygon points="100,260 50,140 150,140"/><polygon points="100,160 70,80 130,80"/><polygon points="250,280 200,160 300,160"/><polygon points="250,180 220,100 280,100"/><polygon points="450,260 400,140 500,140"/><polygon points="450,160 420,80 480,80"/></g></svg>`
+      }
+    ];
+
+    // State
+    let state = {
+      currentIndex: 0,
+      score: 0,
+      streak: 0,
+      observations: {},
+      selectedChips: {},
+      answers: {},
+      customImages: {},
+      addedCards: [],
+      teacherPin: '1234'
+    };
+
+    let titleClickCounter = 0;
+    let clickTimer = null;
+
+    // Load saved data safely
+    try {
+      const savedImgs = Storage.get('landform_custom_images');
+      if (savedImgs) state.customImages = JSON.parse(savedImgs);
+
+      const savedCards = Storage.get('landform_added_cards');
+      if (savedCards) state.addedCards = JSON.parse(savedCards);
+
+      const savedPin = Storage.get('landform_teacher_pin');
+      if (savedPin) state.teacherPin = savedPin;
+    } catch(e) {}
+
+    function getCombinedCards() {
+      return [...DEFAULT_LANDFORMS, ...state.addedCards];
+    }
+
+    function showAlert(title, message) {
+      document.getElementById('alert-title').innerText = title;
+      document.getElementById('alert-message').innerText = message;
+      document.getElementById('alert-modal').style.display = 'flex';
+    }
+
+    function closeAlertModal() {
+      document.getElementById('alert-modal').style.display = 'none';
+    }
+
+    // Secret Triple-Click Title Handler
+    function handleTitleClick() {
+      titleClickCounter++;
+      if (clickTimer) clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => {
+        if (titleClickCounter >= 3) {
+          const btn = document.getElementById('teacher-btn');
+          if (btn.style.display === 'none' || !btn.style.display) {
+            btn.style.display = 'inline-block';
+            showAlert('🔓 Teacher Admin', 'Teacher Admin button is now visible in the header!');
+          } else {
+            btn.style.display = 'none';
+            showAlert('🔒 Teacher Admin', 'Teacher Admin button is now hidden.');
+          }
+        }
+        titleClickCounter = 0;
+      }, 400);
+    }
+
+    // Audio effects
+    const AudioEngine = {
+      ctx: null,
+      init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      },
+      playCorrect() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
+          osc.frequency.setValueAtTime(659.25, this.ctx.currentTime + 0.1);
+          osc.frequency.setValueAtTime(783.99, this.ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.4);
+        } catch(e) {}
+      },
+      playIncorrect() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+          osc.frequency.setValueAtTime(180, this.ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.3);
+        } catch(e) {}
+      }
+    };
+
+    function triggerConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#4caf50', '#0288d1', '#f57c00', '#e91e63', '#9c27b0'];
+
+      for (let i = 0; i < 70; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          vx: (Math.random() - 0.5) * 14,
+          vy: (Math.random() - 0.7) * 14,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 100
+        });
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+        particles.forEach(p => {
+          if (p.life > 0) {
+            active = true;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.35;
+            p.life -= 2;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+        if (active) requestAnimationFrame(render);
+      }
+      render();
+    }
+
+    function renderGame() {
+      const allCards = getCombinedCards();
+      if (state.currentIndex >= allCards.length) state.currentIndex = allCards.length - 1;
+      
+      const current = allCards[state.currentIndex];
+      const main = document.getElementById('main-content');
+      
+      const savedObs = state.observations[current.id] || '';
+      const savedChips = state.selectedChips[current.id] || [];
+
+      if (!current._shuffled) {
+        let opts = [...current.options];
+        opts.sort(() => Math.random() - 0.5);
+        current.options = opts;
+        current._shuffled = true;
+      }
+
+      // Check if user uploaded a photo for this card, otherwise use file/SVG
+      let imgHTML = '';
+      if (state.customImages[current.id]) {
+        imgHTML = `<img src="${state.customImages[current.id]}" alt="${current.label}">`;
+      } else if (current.imgFile) {
+        imgHTML = `<img src="${current.imgFile}" alt="${current.label}" onerror="this.outerHTML='${current.svg ? current.svg.replace(/'/g, "&apos;") : ''}'">`;
+      } else if (current.svg) {
+        imgHTML = current.svg;
+      }
+
+      main.innerHTML = `
+        <div class="game-card">
+          <div class="game-header">
+            <span class="picture-badge">📸 ${current.label} (${state.currentIndex + 1} of ${allCards.length})</span>
+            <div class="score-board">
+              <span class="score-item">⭐ Score: ${state.score}</span>
+              <span class="score-item">🔥 Streak: ${state.streak}</span>
+            </div>
+          </div>
+
+          <div class="content-grid">
+            <div class="image-container">
+              ${imgHTML}
+            </div>
+
+            <div class="workspace">
+              <div class="step-box">
+                <div class="step-title">1️⃣ Step 1: Describe What You See</div>
+                <p style="font-size:0.85rem; color:#666; margin-bottom:8px;">Click feature tags or write your description:</p>
+                <div class="tag-chips">
+                  ${current.tags.map(t => `
+                    <span class="chip ${savedChips.includes(t) ? 'selected' : ''}" onclick="toggleChip('${t}')">${t}</span>
+                  `).join('')}
+                </div>
+                <textarea placeholder="e.g., I see flat land with green grass..." oninput="saveObs('${current.id}', this.value)">${savedObs}</textarea>
+              </div>
+
+              <div class="step-box">
+                <div class="step-title">2️⃣ Step 2: Guess the Landform</div>
+                <div class="options-grid" id="options-container">
+                  ${current.options.map(opt => `
+                    <button class="option-btn" onclick="makeGuess('${opt}', this)">${opt}</button>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <button class="action-btn" style="background:#78909c" onclick="prevCard()" ${state.currentIndex === 0 ? 'disabled' : ''}>← Previous</button>
+            <button class="action-btn" onclick="nextCard()">${state.currentIndex === allCards.length - 1 ? 'Finish Game 🏁' : 'Next Picture →'}</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleChip(tag) {
+      const allCards = getCombinedCards();
+      const current = allCards[state.currentIndex];
+      if (!state.selectedChips[current.id]) state.selectedChips[current.id] = [];
+      
+      const idx = state.selectedChips[current.id].indexOf(tag);
+      if (idx > -1) {
+        state.selectedChips[current.id].splice(idx, 1);
+      } else {
+        state.selectedChips[current.id].push(tag);
+      }
+      renderGame();
+    }
+
+    function saveObs(id, val) {
+      state.observations[id] = val;
+    }
+
+    function makeGuess(choice, btnElement) {
+      const allCards = getCombinedCards();
+      const current = allCards[state.currentIndex];
+      const isCorrect = choice === current.name;
+      
+      const allBtns = document.querySelectorAll('.option-btn');
+      allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+      if (isCorrect) {
+        btnElement.classList.add('correct');
+        AudioEngine.playCorrect();
+        triggerConfetti();
+        state.score += 10 + (state.streak * 2);
+        state.streak++;
+        state.answers[current.id] = { choice, correct: true };
+      } else {
+        btnElement.classList.add('incorrect');
+        AudioEngine.playIncorrect();
+        state.streak = 0;
+        state.answers[current.id] = { choice, correct: false };
+        allBtns.forEach(b => {
+          if (b.innerText.trim() === current.name) b.classList.add('correct');
+        });
+      }
+
+      setTimeout(() => {
+        if (state.currentIndex < allCards.length - 1) {
+          state.currentIndex++;
+          renderGame();
+        } else {
+          showAlert('🎉 Game Complete!', `Final Score: ${state.score} points!`);
+        }
+      }, 1400);
+    }
+
+    function nextCard() {
+      const allCards = getCombinedCards();
+      if (state.currentIndex < allCards.length - 1) {
+        state.currentIndex++;
+        renderGame();
+      } else {
+        showAlert('🎉 Game Complete!', `Final Score: ${state.score} points!`);
+      }
+    }
+
+    function prevCard() {
+      if (state.currentIndex > 0) {
+        state.currentIndex--;
+        renderGame();
+      }
+    }
+
+    // PIN Protection Functions
+    function openPinModal() {
+      document.getElementById('pin-input').value = '';
+      document.getElementById('pin-error').style.display = 'none';
+      document.getElementById('pin-modal').style.display = 'flex';
+      document.getElementById('pin-input').focus();
+    }
+
+    function closePinModal() {
+      document.getElementById('pin-modal').style.display = 'none';
+    }
+
+    function verifyPin() {
+      const enteredPin = document.getElementById('pin-input').value.trim();
+      if (enteredPin === state.teacherPin) {
+        closePinModal();
+        openTeacherPanel();
+      } else {
+        document.getElementById('pin-error').style.display = 'block';
+      }
+    }
+
+    // Teacher Panel Functions
+    function openTeacherPanel() {
+      const modal = document.getElementById('teacher-modal');
+      const list = document.getElementById('teacher-items-list');
+      const allCards = getCombinedCards();
+
+      list.innerHTML = allCards.map((item, index) => {
+        const isCustom = index >= DEFAULT_LANDFORMS.length;
+
+        let previewHTML = '';
+        if (state.customImages[item.id]) {
+          previewHTML = `<img src="${state.customImages[item.id]}">`;
+        } else if (item.imgFile) {
+          previewHTML = `<img src="${item.imgFile}" onerror="this.outerHTML='${item.svg ? item.svg.replace(/'/g, "&apos;") : ''}'">`;
+        } else {
+          previewHTML = item.svg || '';
+        }
+
+        return `
+          <div class="teacher-item-row">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="width:60px; height:45px; overflow:hidden; border-radius:4px; border:1px solid #ccc; background:#000;">
+                ${previewHTML}
+              </div>
+              <div>
+                <strong>${item.label}</strong> — <span style="color:#0288d1; font-weight:bold;">${item.name}</span>
+                ${isCustom ? '<span style="background:#fff3e0; color:#e65100; font-size:0.75rem; padding:2px 6px; border-radius:10px; margin-left:6px;">Custom Card</span>' : ''}
+              </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <label class="action-btn" style="padding:6px 12px; font-size:0.85rem; cursor:pointer;">
+                📁 Upload Photo
+                <input type="file" accept="image/*" style="display:none;" onchange="uploadTeacherImage('${item.id}', this)">
+              </label>
+              ${isCustom ? `<button class="action-btn" style="background:#e53935; padding:6px 12px; font-size:0.85rem;" onclick="deleteCustomCard('${item.id}')">🗑️ Delete</button>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      modal.style.display = 'flex';
+    }
+
+    function showChangePinForm() {
+      const box = document.getElementById('change-pin-box');
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function saveNewPin() {
+      const val = document.getElementById('new-pin-input').value.trim();
+      const status = document.getElementById('pin-change-status');
+      if (val.length > 0) {
+        state.teacherPin = val;
+        Storage.set('landform_teacher_pin', val);
+        status.className = 'success-msg';
+        status.innerText = '✅ PIN updated successfully!';
+      } else {
+        status.className = 'error-msg';
+        status.innerText = '⚠️ Please enter a valid PIN.';
+      }
+    }
+
+    function closeTeacherPanel() {
+      document.getElementById('teacher-modal').style.display = 'none';
+      renderGame();
+    }
+
+    function uploadTeacherImage(id, input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          state.customImages[id] = e.target.result;
+          Storage.set('landform_custom_images', JSON.stringify(state.customImages));
+          openTeacherPanel();
+          showAlert('Photo Uploaded', `Custom image for ${id} uploaded successfully!`);
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function addNewCustomCard() {
+      const nameInput = document.getElementById('new-name').value.trim();
+      const optionsInput = document.getElementById('new-options').value.trim();
+      const tagsInput = document.getElementById('new-tags').value.trim();
+      const fileInput = document.getElementById('new-img-file');
+      const statusMsg = document.getElementById('admin-status-msg');
+
+      if (!nameInput || !optionsInput || !fileInput.files || !fileInput.files[0]) {
+        statusMsg.className = 'error-msg';
+        statusMsg.innerText = '⚠️ Please complete all required fields (Name, Options, Photo File).';
+        return;
+      }
+
+      const distractors = optionsInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      const allOptions = [nameInput, ...distractors];
+      const tags = tagsInput ? tagsInput.split(',').map(s => s.trim()).filter(s => s.length > 0) : [nameInput, 'Natural feature'];
+
+      const allCards = getCombinedCards();
+      const nextLetterCode = 65 + allCards.length;
+      const cardLabel = `PICTURE ${String.fromCharCode(nextLetterCode)}`;
+      const cardId = `CARD_${Date.now()}`;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        state.customImages[cardId] = e.target.result;
+
+        const newCard = {
+          id: cardId,
+          label: cardLabel,
+          name: nameInput,
+          options: allOptions,
+          tags: tags,
+          imgFile: ''
+        };
+
+        state.addedCards.push(newCard);
+        Storage.set('landform_added_cards', JSON.stringify(state.addedCards));
+        Storage.set('landform_custom_images', JSON.stringify(state.customImages));
+
+        document.getElementById('new-name').value = '';
+        document.getElementById('new-options').value = '';
+        document.getElementById('new-tags').value = '';
+        document.getElementById('new-img-file').value = '';
+
+        statusMsg.className = 'success-msg';
+        statusMsg.innerText = '✅ New card added successfully!';
+
+        openTeacherPanel();
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    }
+
+    function deleteCustomCard(id) {
+      state.addedCards = state.addedCards.filter(c => c.id !== id);
+      delete state.customImages[id];
+      Storage.set('landform_added_cards', JSON.stringify(state.addedCards));
+      Storage.set('landform_custom_images', JSON.stringify(state.customImages));
+      openTeacherPanel();
+    }
+
+    function resetAllImages() {
+      state.customImages = {};
+      state.addedCards = [];
+      Storage.remove('landform_custom_images');
+      Storage.remove('landform_added_cards');
+      openTeacherPanel();
+    }
+
+    function initGame() {
+      try {
+        renderGame();
+      } catch(err) {
+        console.error("Initialization error:", err);
+      }
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(initGame, 10);
+    } else {
+      document.addEventListener('DOMContentLoaded', initGame);
+      window.addEventListener('load', initGame);
+    }
+  </script>
+</body>
+</html>
